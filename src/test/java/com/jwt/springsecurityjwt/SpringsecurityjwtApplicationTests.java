@@ -1,13 +1,19 @@
 package com.jwt.springsecurityjwt;
 
+import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
 class SpringsecurityjwtApplicationTests {
+
+
 
 	@Test
 	void contextLoads() {
+
 	}
 
 }

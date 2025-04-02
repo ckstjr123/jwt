@@ -1,3 +1,4 @@
+/*
 package com.jwt.springsecurityjwt.dto;
 
 import com.jwt.springsecurityjwt.entity.Member;
@@ -52,3 +53,4 @@ public class CustomUserDetails implements UserDetails {
     }
 
 }
+*/

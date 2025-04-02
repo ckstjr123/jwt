@@ -5,11 +5,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Getter;
-import lombok.Setter;
 
 @Entity
 @Getter
-@Setter
 public class Member {
 
     @Id
@@ -22,4 +20,15 @@ public class Member {
 
     private String role;
 
+    private String refreshToken;
+    private String refreshTokenExp;
+
+    public static Member createMember(String username, String password, String role) {
+        Member member = new Member();
+        member.username = username;
+        member.password = password;
+        member.role = role;
+
+        return member;
+    }
 }
