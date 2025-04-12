@@ -25,7 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final String[] exceptURIs = {"/join", "/login", "/refresh"};
+    private final String[] exceptURIs = {"/join", "/login", "/refresh", "/logout"};
     private final JwtUtils jwtUtils;
 
     @Override
@@ -54,9 +54,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 request.setAttribute(JwtUtils.JWT_EXCEPTION_ATTRIBUTE, ex.getAuthExceptionType()); // AuthenticationEntryPoint에서 처리
                 throw ex;
             }
+            filterChain.doFilter(request, response); //
         }
 
-        filterChain.doFilter(request, response); //
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     }
 
 }

@@ -20,8 +20,7 @@ public class Member {
 
     private String role;
 
-    private String refreshToken;
-    private String refreshTokenExp;
+    public static final String MEMBER_REFRESH_TOKEN_PREFIX = "refresh_token:member:";
 
     public static Member createMember(String username, String password, String role) {
         Member member = new Member();

@@ -18,8 +18,8 @@ import java.util.Date;
 @Component
 public class JwtUtils {
 
-    public static final long accessTokenExpiredMs = Duration.ofMinutes(1).toMillis();
-    public static final long refreshTokenExpiredMs = Duration.ofMinutes(3).toMillis();
+    public static final long ACCESS_TOKEN_EXPIRED_MS = Duration.ofMinutes(3).toMillis();
+    public static final long REFRESH_TOKEN_EXPIRED_MS = Duration.ofMinutes(10).toMillis();
     public static final String JWT_EXCEPTION_ATTRIBUTE = "JWT_EXCEPTION";
     private final SecretKey secretKey;
 

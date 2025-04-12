@@ -3,6 +3,8 @@ package com.jwt.springsecurityjwt.service;
 import com.jwt.springsecurityjwt.constant.Role;
 import com.jwt.springsecurityjwt.dto.MemberJoinDto;
 import com.jwt.springsecurityjwt.entity.Member;
+import com.jwt.springsecurityjwt.exception.AuthenticationException;
+import com.jwt.springsecurityjwt.exception.response.AuthExceptionType;
 import com.jwt.springsecurityjwt.jwt.JwtUser;
 import com.jwt.springsecurityjwt.jwt.JwtUtils;
 import com.jwt.springsecurityjwt.jwt.vo.JwtReissueRequest;
@@ -14,6 +16,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import static com.jwt.springsecurityjwt.entity.Member.MEMBER_REFRESH_TOKEN_PREFIX;
+import static com.jwt.springsecurityjwt.jwt.JwtUtils.ACCESS_TOKEN_EXPIRED_MS;
+import static com.jwt.springsecurityjwt.jwt.JwtUtils.REFRESH_TOKEN_EXPIRED_MS;
+
 @Service
 @RequiredArgsConstructor
 public class MemberService {
@@ -21,6 +27,7 @@ public class MemberService {
     private final JwtUtils jwtUtils;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RedisUtils redisUtils;
 
     @Transactional
     public Long join(MemberJoinDto memberJoinDto) {
@@ -38,19 +45,29 @@ public class MemberService {
 
     @Transactional
     public JwtResponse refresh(JwtReissueRequest tokenRefreshRequest) {
-        // 리프레시 토큰 검증 수행됨(만료 등 예외 처리를 위해 ExceptionHandler 등록 필요)
-        Claims refreshTokenClaims = this.jwtUtils.extractVaildClaims(tokenRefreshRequest.getRefreshToken());
+        //refresh token 검증 수행됨(만료 등 예외 처리를 위해 ExceptionHandler 등록 필요)
+        String refreshToken = tokenRefreshRequest.getRefreshToken();
+        Claims rtClaims = this.jwtUtils.extractVaildClaims(refreshToken);
 
-        // !hasText("EXPIRED") -> 저장된 리프레시 토큰과 일치하는지 검증(일치하지 않으면 "EXPIRED" 업데이트 처리) -> 400 응답 //
-
-        JwtUser refreshUserInfo = JwtUser.from(refreshTokenClaims);
+        JwtUser refreshUserInfo = JwtUser.from(rtClaims);
         Long memberId = refreshUserInfo.getMemberId();
-        String username = refreshUserInfo.getUsername();
-        String role = refreshUserInfo.getRole();
 
-        String accessToken = "Bearer " + this.jwtUtils.generateJwt(memberId, username, role, JwtUtils.accessTokenExpiredMs);
-        String refreshToken = this.jwtUtils.generateJwt(memberId, username, role, JwtUtils.refreshTokenExpiredMs);
-        return new JwtResponse(accessToken, refreshToken);
+        String savedRefreshToken = this.redisUtils.getValue(MEMBER_REFRESH_TOKEN_PREFIX + memberId);
+        if (savedRefreshToken == null) {
+            throw new AuthenticationException(AuthExceptionType.EXPIRED_JWT);
+        } else if (!savedRefreshToken.equals(refreshToken)) {
+            this.redisUtils.deleteData(MEMBER_REFRESH_TOKEN_PREFIX + memberId);
+            throw new AuthenticationException(AuthExceptionType.INVALID_JWT); // 400
+        }
+
+        return this.refreshTokenRotation(memberId, refreshUserInfo.getUsername(), refreshUserInfo.getRole());
+    }
+
+    private JwtResponse refreshTokenRotation(Long memberId, String username, String role) {
+        String accessToken = "Bearer " + this.jwtUtils.generateJwt(memberId, username, role, ACCESS_TOKEN_EXPIRED_MS);
+        String rotateRefreshToken = this.jwtUtils.generateJwt(memberId, username, role, REFRESH_TOKEN_EXPIRED_MS);
+        this.redisUtils.setDataExpire(MEMBER_REFRESH_TOKEN_PREFIX + memberId, rotateRefreshToken, REFRESH_TOKEN_EXPIRED_MS);
+        return new JwtResponse(accessToken, rotateRefreshToken);
     }
 
 }

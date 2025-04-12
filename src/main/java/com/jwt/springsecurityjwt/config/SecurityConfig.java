@@ -1,22 +1,27 @@
 package com.jwt.springsecurityjwt.config;
 
 import com.jwt.springsecurityjwt.constant.Role;
-import com.jwt.springsecurityjwt.jwt.JwtAuthenticationFilter;
-import com.jwt.springsecurityjwt.jwt.JwtUtils;
-import com.jwt.springsecurityjwt.jwt.LoginFilter;
+import com.jwt.springsecurityjwt.jwt.*;
+import com.jwt.springsecurityjwt.service.RedisUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.security.web.authentication.logout.LogoutSuccessEventPublishingLogoutHandler;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.Collections;
@@ -28,6 +33,7 @@ public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JwtUtils jwtUtils;
+    private final RedisUtils redisUtils;
     private final AuthenticationEntryPoint authenticationEntryPoint;
 
     @Bean
@@ -61,26 +67,28 @@ public class SecurityConfig {
 
 
         http
-                .csrf((auth) -> auth.disable());
+                .csrf(AbstractHttpConfigurer::disable);
 
         http
                 .exceptionHandling(config -> config.authenticationEntryPoint(this.authenticationEntryPoint));
 
         http
-                .formLogin((auth) -> auth.disable());
+                .formLogin(AbstractHttpConfigurer::disable);
 
         http
-                .httpBasic((auth) -> auth.disable());
+                .httpBasic(AbstractHttpConfigurer::disable);
 
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/", "/login", "/join", "/refresh").permitAll()
+                        .requestMatchers("/login", "/join", "/refresh").permitAll()
+                        .requestMatchers("/").authenticated()
                         .requestMatchers("/admin").hasAuthority(Role.ADMIN)
                         .anyRequest().authenticated());
 
         http
                 .addFilterBefore(new JwtAuthenticationFilter(this.jwtUtils), LoginFilter.class)
-                .addFilterAt(new LoginFilter(this.authenticationManager(authenticationConfiguration), this.jwtUtils), UsernamePasswordAuthenticationFilter.class);
+                .addFilterAt(new LoginFilter(this.authenticationManager(authenticationConfiguration), this.jwtUtils, this.redisUtils), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAt(new CustomLogoutFilter(new SimpleUrlLogoutSuccessHandler(), this.jwtUtils, this.redisUtils, new SecurityContextLogoutHandler(), new LogoutSuccessEventPublishingLogoutHandler()), LogoutFilter.class);
 
         http
                 .sessionManagement((session) -> session

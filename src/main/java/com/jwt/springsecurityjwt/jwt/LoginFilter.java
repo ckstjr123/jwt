@@ -1,5 +1,6 @@
 package com.jwt.springsecurityjwt.jwt;
 
+import com.jwt.springsecurityjwt.service.RedisUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -17,7 +18,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
-import java.time.Duration;
+
+import static com.jwt.springsecurityjwt.entity.Member.MEMBER_REFRESH_TOKEN_PREFIX;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -25,6 +27,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
+    private final RedisUtils redisUtils;
 
 
     @Override
@@ -49,8 +52,10 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String role = grantedAuthority.getAuthority();
         
         //access & refresh 토큰 발행
-        String accessToken = this.jwtUtils.generateJwt(memberId, username, role, JwtUtils.accessTokenExpiredMs);
-        String refreshToken = this.jwtUtils.generateJwt(memberId, username, role, JwtUtils.refreshTokenExpiredMs);
+        String accessToken = this.jwtUtils.generateJwt(memberId, username, role, JwtUtils.ACCESS_TOKEN_EXPIRED_MS);
+        String refreshToken = this.jwtUtils.generateJwt(memberId, username, role, JwtUtils.REFRESH_TOKEN_EXPIRED_MS);
+
+        this.saveRefreshToken(memberId, refreshToken); // refresh token TTL 지정해서 레디스에 저장
 
         //토큰 발급(모바일의 경우 모든 토큰을 헤더로 전달)
         response.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken); // '액세스 토큰은 헤더로' 전달
@@ -65,6 +70,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     }
 
+
     private Cookie createCookie(String key, String value) {
         Cookie cookie = new Cookie(key, value);
         cookie.setMaxAge(3 * 60);
@@ -72,6 +78,10 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 //        cookie.setPath("/"); // 쿠키가 적용될 경로
         cookie.setHttpOnly(true);
         return cookie;
+    }
+
+    private void saveRefreshToken(Long memberId, String refreshToken) {
+        this.redisUtils.setDataExpire(MEMBER_REFRESH_TOKEN_PREFIX + memberId, refreshToken, JwtUtils.REFRESH_TOKEN_EXPIRED_MS);
     }
 
 }
