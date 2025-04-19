@@ -24,7 +24,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
-        ExceptionType exceptionType = (ExceptionType) request.getAttribute(JwtUtils.JWT_EXCEPTION_ATTRIBUTE);
+        ExceptionType exceptionType = (ExceptionType) request.getAttribute(JwtProvider.JWT_EXCEPTION_ATTRIBUTE);
         if (exceptionType != null) {
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.setCharacterEncoding("UTF-8");

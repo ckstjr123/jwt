@@ -6,7 +6,7 @@ import com.jwt.springsecurityjwt.entity.Member;
 import com.jwt.springsecurityjwt.exception.AuthenticationException;
 import com.jwt.springsecurityjwt.exception.response.AuthExceptionType;
 import com.jwt.springsecurityjwt.jwt.JwtUser;
-import com.jwt.springsecurityjwt.jwt.JwtUtils;
+import com.jwt.springsecurityjwt.jwt.JwtProvider;
 import com.jwt.springsecurityjwt.jwt.vo.JwtReissueRequest;
 import com.jwt.springsecurityjwt.jwt.vo.JwtResponse;
 import com.jwt.springsecurityjwt.repository.MemberRepository;
@@ -17,14 +17,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import static com.jwt.springsecurityjwt.entity.Member.MEMBER_REFRESH_TOKEN_PREFIX;
-import static com.jwt.springsecurityjwt.jwt.JwtUtils.ACCESS_TOKEN_EXPIRED_MS;
-import static com.jwt.springsecurityjwt.jwt.JwtUtils.REFRESH_TOKEN_EXPIRED_MS;
+import static com.jwt.springsecurityjwt.jwt.JwtProvider.ACCESS_TOKEN_EXPIRED_MS;
+import static com.jwt.springsecurityjwt.jwt.JwtProvider.REFRESH_TOKEN_EXPIRED_MS;
 
 @Service
 @RequiredArgsConstructor
 public class MemberService {
 
-    private final JwtUtils jwtUtils;
+    private final JwtProvider jwtProvider;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final RedisUtils redisUtils;
@@ -47,7 +47,7 @@ public class MemberService {
     public JwtResponse refresh(JwtReissueRequest tokenRefreshRequest) {
         //refresh token 검증 수행됨(만료 등 예외 처리를 위해 ExceptionHandler 등록 필요)
         String refreshToken = tokenRefreshRequest.getRefreshToken();
-        Claims rtClaims = this.jwtUtils.extractVaildClaims(refreshToken);
+        Claims rtClaims = this.jwtProvider.extractVaildClaims(refreshToken);
 
         JwtUser refreshUserInfo = JwtUser.from(rtClaims);
         Long memberId = refreshUserInfo.getMemberId();
@@ -64,8 +64,8 @@ public class MemberService {
     }
 
     private JwtResponse refreshTokenRotation(Long memberId, String username, String role) {
-        String accessToken = "Bearer " + this.jwtUtils.generateJwt(memberId, username, role, ACCESS_TOKEN_EXPIRED_MS);
-        String rotateRefreshToken = this.jwtUtils.generateJwt(memberId, username, role, REFRESH_TOKEN_EXPIRED_MS);
+        String accessToken = "Bearer " + this.jwtProvider.issueAccessToken(memberId, username, role);
+        String rotateRefreshToken = this.jwtProvider.issueRefreshToken(memberId);
         this.redisUtils.setDataExpire(MEMBER_REFRESH_TOKEN_PREFIX + memberId, rotateRefreshToken, REFRESH_TOKEN_EXPIRED_MS);
         return new JwtResponse(accessToken, rotateRefreshToken);
     }

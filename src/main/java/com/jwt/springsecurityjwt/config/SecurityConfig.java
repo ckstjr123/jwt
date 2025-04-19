@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -32,7 +31,7 @@ import java.util.Collections;
 public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
-    private final JwtUtils jwtUtils;
+    private final JwtProvider jwtProvider;
     private final RedisUtils redisUtils;
     private final AuthenticationEntryPoint authenticationEntryPoint;
 
@@ -86,9 +85,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated());
 
         http
-                .addFilterBefore(new JwtAuthenticationFilter(this.jwtUtils), LoginFilter.class)
-                .addFilterAt(new LoginFilter(this.authenticationManager(authenticationConfiguration), this.jwtUtils, this.redisUtils), UsernamePasswordAuthenticationFilter.class)
-                .addFilterAt(new CustomLogoutFilter(new SimpleUrlLogoutSuccessHandler(), this.jwtUtils, this.redisUtils, new SecurityContextLogoutHandler(), new LogoutSuccessEventPublishingLogoutHandler()), LogoutFilter.class);
+                .addFilterBefore(new JwtAuthenticationFilter(this.jwtProvider), LoginFilter.class)
+                .addFilterAt(new LoginFilter(this.authenticationManager(authenticationConfiguration), this.jwtProvider, this.redisUtils), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAt(new CustomLogoutFilter(new SimpleUrlLogoutSuccessHandler(), this.jwtProvider, this.redisUtils, new SecurityContextLogoutHandler(), new LogoutSuccessEventPublishingLogoutHandler()), LogoutFilter.class);
 
         http
                 .sessionManagement((session) -> session

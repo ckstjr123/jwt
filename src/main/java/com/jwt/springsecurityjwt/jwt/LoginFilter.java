@@ -26,7 +26,7 @@ import static com.jwt.springsecurityjwt.entity.Member.MEMBER_REFRESH_TOKEN_PREFI
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
-    private final JwtUtils jwtUtils;
+    private final JwtProvider jwtProvider;
     private final RedisUtils redisUtils;
 
 
@@ -52,8 +52,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String role = grantedAuthority.getAuthority();
         
         //access & refresh 토큰 발행
-        String accessToken = this.jwtUtils.generateJwt(memberId, username, role, JwtUtils.ACCESS_TOKEN_EXPIRED_MS);
-        String refreshToken = this.jwtUtils.generateJwt(memberId, username, role, JwtUtils.REFRESH_TOKEN_EXPIRED_MS);
+        String accessToken = this.jwtProvider.issueAccessToken(memberId, username, role);
+        String refreshToken = this.jwtProvider.issueRefreshToken(memberId);
 
         this.saveRefreshToken(memberId, refreshToken); // refresh token TTL 지정해서 레디스에 저장
 
@@ -81,7 +81,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     private void saveRefreshToken(Long memberId, String refreshToken) {
-        this.redisUtils.setDataExpire(MEMBER_REFRESH_TOKEN_PREFIX + memberId, refreshToken, JwtUtils.REFRESH_TOKEN_EXPIRED_MS);
+        this.redisUtils.setDataExpire(MEMBER_REFRESH_TOKEN_PREFIX + memberId, refreshToken, JwtProvider.REFRESH_TOKEN_EXPIRED_MS);
     }
 
 }

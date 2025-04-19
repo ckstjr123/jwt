@@ -26,7 +26,7 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final String[] exceptURIs = {"/join", "/login", "/refresh", "/logout"};
-    private final JwtUtils jwtUtils;
+    private final JwtProvider jwtProvider;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
@@ -42,7 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             try {
                 //검증 완료된 액세스 토큰으로부터 클레임 추출
-                Claims claims = this.jwtUtils.extractVaildClaims(accessToken);
+                Claims claims = this.jwtProvider.extractVaildClaims(accessToken);
 
                 //임시 세션 보관용 유저 객체 생성
                 JwtUser loginMember = JwtUser.from(claims);
@@ -51,7 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication); // 인증된 유저에 대해 현재 요청 동안에만 사용될 임시 세션
                 log.info("{}'s JWT verification is successful", loginMember.getUsername());
             } catch (AuthenticationException ex) {
-                request.setAttribute(JwtUtils.JWT_EXCEPTION_ATTRIBUTE, ex.getAuthExceptionType()); // AuthenticationEntryPoint에서 처리
+                request.setAttribute(JwtProvider.JWT_EXCEPTION_ATTRIBUTE, ex.getAuthExceptionType()); // AuthenticationEntryPoint에서 처리
                 throw ex;
             }
             filterChain.doFilter(request, response); //
