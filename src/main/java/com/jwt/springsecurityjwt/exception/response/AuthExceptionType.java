@@ -10,7 +10,8 @@ public enum AuthExceptionType implements ExceptionType {
     EXPIRED_JWT("만료된 JWT 토큰입니다."),
     MALFORMED_JWT("손상된 토큰입니다."),
     UNSUPPORTED_JWT("지원하지 않는 JWT 토큰입니다."),
-    INVALID_JWT("유효하지 않은 JWT 토큰입니다.");
+    INVALID_JWT("유효하지 않은 JWT 토큰입니다."),
+    VIOLATE_REFRESH_JWT("비정상적인 JWT 갱신 토큰 사용이 감지되었습니다.");
 
     private final String errorCode;
     private final String description;

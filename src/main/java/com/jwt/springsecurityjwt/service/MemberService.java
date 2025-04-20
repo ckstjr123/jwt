@@ -4,6 +4,7 @@ import com.jwt.springsecurityjwt.constant.Role;
 import com.jwt.springsecurityjwt.dto.MemberJoinDto;
 import com.jwt.springsecurityjwt.entity.Member;
 import com.jwt.springsecurityjwt.exception.AuthenticationException;
+import com.jwt.springsecurityjwt.exception.RefreshViolationException;
 import com.jwt.springsecurityjwt.exception.response.AuthExceptionType;
 import com.jwt.springsecurityjwt.jwt.JwtUser;
 import com.jwt.springsecurityjwt.jwt.JwtProvider;
@@ -17,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import static com.jwt.springsecurityjwt.entity.Member.MEMBER_REFRESH_TOKEN_PREFIX;
+import static com.jwt.springsecurityjwt.exception.response.AuthExceptionType.VIOLATE_REFRESH_JWT;
 import static com.jwt.springsecurityjwt.jwt.JwtProvider.ACCESS_TOKEN_EXPIRED_MS;
 import static com.jwt.springsecurityjwt.jwt.JwtProvider.REFRESH_TOKEN_EXPIRED_MS;
 
@@ -57,7 +59,7 @@ public class MemberService {
             throw new AuthenticationException(AuthExceptionType.EXPIRED_JWT);
         } else if (!savedRefreshToken.equals(refreshToken)) {
             this.redisUtils.deleteData(MEMBER_REFRESH_TOKEN_PREFIX + memberId);
-            throw new AuthenticationException(AuthExceptionType.INVALID_JWT); // 400
+            throw new RefreshViolationException(VIOLATE_REFRESH_JWT); // 400
         }
 
         return this.refreshTokenRotation(memberId, refreshUserInfo.getUsername(), refreshUserInfo.getRole());
