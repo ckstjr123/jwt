@@ -18,6 +18,7 @@ import java.util.Date;
 @Component
 public class JwtProvider {
 
+    private static final String ACCESS_TOKEN_TYPE = "Bearer";
     public static final long ACCESS_TOKEN_EXPIRED_MS = Duration.ofMinutes(3).toMillis();
     public static final long REFRESH_TOKEN_EXPIRED_MS = Duration.ofMinutes(10).toMillis();
     public static final String JWT_EXCEPTION_ATTRIBUTE = "JWT_EXCEPTION";
@@ -37,6 +38,7 @@ public class JwtProvider {
                 .subject(memberId.toString())
                 .claim("username", username)
                 .claim("role", role)
+                .claim("token_type", ACCESS_TOKEN_TYPE)
                 .issuedAt(now)
                 .expiration(expirationDate)
                 .signWith(this.secretKey)

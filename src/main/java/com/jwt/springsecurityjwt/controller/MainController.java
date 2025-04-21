@@ -13,7 +13,7 @@ public class MainController {
     @GetMapping("/")
     public String main(@AuthenticationPrincipal JwtUser loginMember) {
         if (loginMember != null) {
-            log.info("login member id: {}", loginMember.getMemberId());
+            log.info("login member id: {}, username: {}, role: {}", loginMember.getMemberId(), loginMember.getUsername(), loginMember.getRole());
         }
 
         return "Main Controller";

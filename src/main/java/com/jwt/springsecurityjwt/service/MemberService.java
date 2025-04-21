@@ -58,8 +58,8 @@ public class MemberService {
         if (savedRefreshToken == null) {
             throw new AuthenticationException(AuthExceptionType.EXPIRED_JWT);
         } else if (!savedRefreshToken.equals(refreshToken)) {
-            this.redisUtils.deleteData(MEMBER_REFRESH_TOKEN_PREFIX + memberId);
-            throw new RefreshViolationException(VIOLATE_REFRESH_JWT); // 400
+            this.redisUtils.deleteData(MEMBER_REFRESH_TOKEN_PREFIX + memberId); // (해당하는 유효한 요청 갱신 토큰을 블랙리스트에 등록하는 작업으로 대체할 수 있음)
+            throw new RefreshViolationException(VIOLATE_REFRESH_JWT);
         }
 
         return this.refreshTokenRotation(memberId, refreshUserInfo.getUsername(), refreshUserInfo.getRole());
