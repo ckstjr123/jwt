@@ -6,8 +6,8 @@ import com.jwt.springsecurityjwt.entity.Member;
 import com.jwt.springsecurityjwt.exception.AuthenticationException;
 import com.jwt.springsecurityjwt.exception.RefreshViolationException;
 import com.jwt.springsecurityjwt.exception.response.AuthExceptionType;
-import com.jwt.springsecurityjwt.jwt.JwtUser;
 import com.jwt.springsecurityjwt.jwt.JwtProvider;
+import com.jwt.springsecurityjwt.jwt.JwtUser;
 import com.jwt.springsecurityjwt.jwt.vo.JwtReissueRequest;
 import com.jwt.springsecurityjwt.jwt.vo.JwtResponse;
 import com.jwt.springsecurityjwt.repository.MemberRepository;
@@ -19,8 +19,6 @@ import org.springframework.stereotype.Service;
 
 import static com.jwt.springsecurityjwt.entity.Member.MEMBER_REFRESH_TOKEN_PREFIX;
 import static com.jwt.springsecurityjwt.exception.response.AuthExceptionType.VIOLATE_REFRESH_JWT;
-import static com.jwt.springsecurityjwt.jwt.JwtProvider.ACCESS_TOKEN_EXPIRED_MS;
-import static com.jwt.springsecurityjwt.jwt.JwtProvider.REFRESH_TOKEN_EXPIRED_MS;
 
 @Service
 @RequiredArgsConstructor
@@ -68,7 +66,7 @@ public class MemberService {
     private JwtResponse refreshTokenRotation(Long memberId, String username, String role) {
         String accessToken = "Bearer " + this.jwtProvider.issueAccessToken(memberId, username, role);
         String rotateRefreshToken = this.jwtProvider.issueRefreshToken(memberId);
-        this.redisUtils.setDataExpire(MEMBER_REFRESH_TOKEN_PREFIX + memberId, rotateRefreshToken, REFRESH_TOKEN_EXPIRED_MS);
+        this.redisUtils.setDataExpire(MEMBER_REFRESH_TOKEN_PREFIX + memberId, rotateRefreshToken, JwtProvider.REFRESH_TOKEN_EXPIRE_MS);
         return new JwtResponse(accessToken, rotateRefreshToken);
     }
 

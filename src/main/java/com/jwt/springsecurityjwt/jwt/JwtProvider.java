@@ -19,8 +19,8 @@ import java.util.Date;
 public class JwtProvider {
 
     private final String ACCESS_TOKEN_TYPE = "Bearer";
-    public static final long ACCESS_TOKEN_EXPIRED_MS = Duration.ofMinutes(3).toMillis();
-    public static final long REFRESH_TOKEN_EXPIRED_MS = Duration.ofMinutes(10).toMillis();
+    private final long ACCESS_TOKEN_EXPIRE_MS = Duration.ofMinutes(3).toMillis();
+    public static final long REFRESH_TOKEN_EXPIRE_MS = Duration.ofMinutes(10).toMillis();
     public static final String JWT_EXCEPTION_ATTRIBUTE = "JWT_EXCEPTION";
     private final SecretKey secretKey;
 
@@ -33,7 +33,7 @@ public class JwtProvider {
     //로그인 성공 시 토큰 발급 역할
     public String issueAccessToken(Long memberId, String username, String role) {
         Date now = new Date();
-        Date expirationDate = new Date(now.getTime() + ACCESS_TOKEN_EXPIRED_MS);
+        Date expirationDate = new Date(now.getTime() + ACCESS_TOKEN_EXPIRE_MS);
         return Jwts.builder()
                 .subject(memberId.toString())
                 .claim("username", username)
@@ -47,7 +47,7 @@ public class JwtProvider {
 
     public String issueRefreshToken(Long memberId) {
         Date now = new Date();
-        Date expirationDate = new Date(now.getTime() + REFRESH_TOKEN_EXPIRED_MS);
+        Date expirationDate = new Date(now.getTime() + REFRESH_TOKEN_EXPIRE_MS);
         return Jwts.builder()
                 .subject(memberId.toString())
                 .issuedAt(now)

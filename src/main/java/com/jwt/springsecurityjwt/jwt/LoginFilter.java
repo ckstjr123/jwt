@@ -81,7 +81,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     private void saveRefreshToken(Long memberId, String refreshToken) {
-        this.redisUtils.setDataExpire(MEMBER_REFRESH_TOKEN_PREFIX + memberId, refreshToken, JwtProvider.REFRESH_TOKEN_EXPIRED_MS);
+        this.redisUtils.setDataExpire(MEMBER_REFRESH_TOKEN_PREFIX + memberId, refreshToken, JwtProvider.REFRESH_TOKEN_EXPIRE_MS);
     }
 
 }
