@@ -74,21 +74,4 @@ public class JwtProvider {
         }
     }
 
-/*    public boolean isExpired(String token) {
-        try {
-            Jwts.parser().verifyWith(this.secretKey).build().parseSignedClaims(token);
-            return false;
-        } catch (ExpiredJwtException ex) {
-            return true;
-        } catch (SignatureException ex) {
-            throw new AuthenticationException(AuthExceptionType.SIGNATURE_JWT, ex);
-        } catch (MalformedJwtException ex) {
-            throw new AuthenticationException(AuthExceptionType.MALFORMED_JWT, ex);
-        } catch (UnsupportedJwtException ex) {
-            throw new AuthenticationException(AuthExceptionType.UNSUPPORTED_JWT, ex);
-        } catch (JwtException | IllegalArgumentException ex) {
-            throw new AuthenticationException(AuthExceptionType.INVALID_JWT, ex);
-        }
-    }*/
-
 }
