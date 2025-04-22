@@ -54,7 +54,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 request.setAttribute(JwtProvider.JWT_EXCEPTION_ATTRIBUTE, ex.getAuthExceptionType()); // AuthenticationEntryPoint에서 처리
                 throw ex;
             }
-            filterChain.doFilter(request, response); //
+            filterChain.doFilter(request, response);
+            return;
         }
 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
